@@ -1,0 +1,925 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Promises for Game Development by ashleydavis</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/ashleydavis/promises-for-game-development">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/ashleydavis/promises-for-game-development/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/ashleydavis/promises-for-game-development/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Promises for Game Development</h1>
+          <p>In this article we talk about our experience making the promises pattern work for game development. We aim to explain how promises can improve your game development process.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/ashleydavis">ashleydavis</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a id="promises-for-game-development" class="anchor" href="#promises-for-game-development" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for Game Development</h1>
+
+<p>First published at: <a href="https://www.what-could-possibly-go-wrong.com/promises-for-game-development/">https://www.what-could-possibly-go-wrong.com/promises-for-game-development/</a></p>
+
+<h2>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
+
+<p>In this article we talk about our experience making the <a href="http://en.wikipedia.org/wiki/Futures_and_promises">promises pattern</a> work for game development. We aim to explain how promises can improve your game development process.</p>
+
+<p>This isn't a beginner level article. You'll need a basic to intermediate level understanding of C#. It will help if you have already tried game development and know the struggle to scale up from smaller to larger games. You should already understand how difficult it can be to manage chains of asynchronous operations and complex webs of interdependent and time-sequenced game logic. You are looking for a better way to structure this kind of code. If this is where you find yourself, then this article will give you a new option.</p>
+
+<p>In this article we will spend some time introducing promises and generally explaining how they can be useful in game development. Then we'll get more specific about how promises can be applied to game development. This leads into a discussion about how we have extended the promises pattern to cope with more advanced game development problems: composing game logic from smaller units, sequencing time-based logic and structuring conditionally gated logic. We finish by comparing promises to the other alternatives you may have used or be considering.    </p>
+
+<p>As you read this article keep in mind that we will never assert that promises are right for every situation. They certainly aren't the only tool you'll ever need in game development. Promises are a powerful tool for structuring complex asynchronous code and at first you might find they are difficult to appreciate. In a world where asynchronous code is becoming more and more prevalent we need patterns like this to help tame the ever-increasing complexity in our code.</p>
+
+<p>At Real Serious Games we use C# with Unity. If you intend to use promises with C# (combined with any C# game engine, not just Unity) you can get started straight away using our promises library. If you intend to use promises with Javascript you have plenty of good libraries at your disposal and the latest version of Javascript even includes promises. If you work with other languages, these techniques can still work for you, but you’ll have some work ahead to get started if you can’t find an existing promises library.</p>
+
+<p>Our C# promises library is available on github: <a href="https://github.com/Real-Serious-Games/c-sharp-promise">https://github.com/Real-Serious-Games/c-sharp-promise</a>.</p>
+
+<p>A Unity example showing promises can also be found on github: <a href="https://github.com/adamsingle/PromisesUnityDemo">https://github.com/adamsingle/PromisesUnityDemo</a></p>
+
+<h2>
+<a id="contents" class="anchor" href="#contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contents</h2>
+
+<ul>
+<li><a href="#introduction-to-promises">Introduction to Promises</a></li>
+<li><a href="#promises-for-game-development">Promises for Game Development</a></li>
+<li><a href="#promises-to-the-rescue-in-c">Promises to the Rescue in C#</a></li>
+<li><a href="#promises-to-the-rescue-in-game-dev">Promises to the Rescue in Game Dev</a></li>
+<li><a href="#promises-for-composing-game-logic">Promises for Composing Game Logic</a></li>
+<li><a href="#promises-for-time-based-logic">Promises for Time-based Logic</a></li>
+<li><a href="#promises-for-conditional-gating">Promises for Conditional Gating</a></li>
+<li><a href="#promises-vs-unity-coroutines">Promises vs Unity Coroutines</a></li>
+<li><a href="#almost-behaviour-trees">Almost Behaviour Trees?</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#about-the-authors">About the Authors</a></li>
+</ul>
+
+<h2>
+<a id="introduction-to-promises" class="anchor" href="#introduction-to-promises" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction to Promises</h2>
+
+<p>Promises are a <a href="http://en.wikipedia.org/wiki/Software_design_pattern">design pattern</a> to structure asynchronous code and smooth over the complexities of running sequences of (dependent) asynchronous operations. </p>
+
+<p>I read an <a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">article</a> recently that helped me concisely understand exactly how promises help us. Normally when running an asynchronous function there is no easy way to get a result back. In addition we have the difficulties of handling errors and exceptions. What exactly will happen if the async code throws an exception? As so eloquently put in that article <em>the point of promises is to give us back <a href="http://en.wikipedia.org/wiki/Function_composition_(computer_science)">functional composition</a> and <a href="http://en.wikipedia.org/wiki/Exception_handling">error bubbling</a> in the async world</em>.</p>
+
+<p>A promise is a <a href="http://en.wikipedia.org/wiki/Abstraction_(computer_science)">software abstraction</a> that can bind together multiple asynchronous operations into a single <em><a href="http://en.wikipedia.org/wiki/Pipeline_(software)">pipeline</a></em> represented as a <em><a href="http://stackoverflow.com/questions/705173/what-is-meant-by-first-class-object">first-class object</a></em>. A contract is made with the promise that at some time in the future the async operation(s) will either complete successfully or have been rejected (indicating that an error occurred at some stage of the pipeline). </p>
+
+<p>Results from each async operation are passed through the pipeline. This allows us to easily retrieve and act on results from our async code. When the pipeline has completed successfully our <em>success callback</em> will be invoked.</p>
+
+<p><img src="/content/images/2015/06/PromisesPipeline-1.png" alt=""></p>
+
+<p>Promises have a powerful error handling mechanism (conceptually similar to <a href="http://en.wikipedia.org/wiki/Exception_handling">exception handling</a>) that allows error handlers to be injected at any stage of the pipeline. If you are only interested in the success or failure of the entire sequence of async operations, then put your error handling at the end of the pipeline. If an error occurs at any stage of the pipeline, the rest of the pipeline stages will be short-circuited and control transferred to the error handler. This gives the equivalent of try/catch exception handling with respect to our async code. </p>
+
+<p><img src="/content/images/2015/06/PromisesErrors-1.png" alt=""></p>
+
+<p>We first noticed promises through our experience developing web applications in Javascript. Just so we're clear here, I'm talking about real Javascript, not <a href="http://wiki.unity3d.com/index.php?title=UnityScript_versus_JavaScript">Unity pseudo-Javascript</a>. From reading <a href="http://en.wikipedia.org/wiki/Futures_and_promises">the wikipedia page</a> it appears promises migrated to Javascript from <a href="http://en.wikipedia.org/wiki/Functional_programming">functional languages</a>, where so many good ideas originate.</p>
+
+<p>Promises in Javascript are often lauded as the cure for the antipattern known as <a href="http://callbackhell.com/">callback hell</a>. Of course there are many Javascript libraries for management of async code, however the promises pattern has risen above the herd as the solution of choice and something of a <a href="https://promisesaplus.com/">standard</a>.</p>
+
+<p>Now for an overview of how promises can help you as a game developer...</p>
+
+<h2>
+<a id="promises-for-game-development-1" class="anchor" href="#promises-for-game-development-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for Game Development</h2>
+
+<p>How are games structured and how can promises improve game development?</p>
+
+<p>You could argue that a game is a sequence of time-dependent activities happening one after the other, dependent on and influenced by previous activities and user input. Game or level completion happens when the player satisfies a set of objectives. Objectives depend on activities and prior objectives. If you can imagine looking at it from a 4-dimensional perspective, a game looks like an interwoven tapestry of objectives and activities with complex dependencies between them.</p>
+
+<p>Some of the prize tools in any game development toolbox are those that help wire together objective and activity dependencies in a manner that is elegant, expressive and easy to change as the game is evolved. Of course we already have many patterns at our disposal for structuring game code: the <a href="http://en.wikipedia.org/wiki/Strategy_pattern">strategy pattern</a>, <a href="http://en.wikipedia.org/wiki/Finite-state_machine">finite state machines</a> (fsms), hierarchical fsms, <a href="http://www.gamasutra.com/blogs/ChrisSimpson/20140717/221339/Behavior_trees_for_AI_How_they_work.php">behavior trees</a>, scripting, coroutines, messaging/event systems, entity component systems and probably more. All are worth understanding.</p>
+
+<p>We'd like to show that promises belong in this mix. They are a simple alternative, very useful for a great variety of tasks and you can probably start using them straight away. The power of promises comes from the ability to treat a sequence of activities as a single entity. This is the base of reuse with promises, you can create bigger and bigger building blocks from which to compose a variety of game logic and behaviour. The resulting code is readable, understandable and maintainable.</p>
+
+<p>Promises are already immediately useful for many traditionally asynchronous operations such as loading assets. We also use them for sequencing movements, animations and sound into sequences you might easily call a cutscene. But for some of the more complex logic we had to  upgrade the promises pattern. Before we get to that, let's cover the more basic use of promises in C#.</p>
+
+<h2>
+<a id="promises-to-the-rescue-in-c" class="anchor" href="#promises-to-the-rescue-in-c" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises to the Rescue in C#</h2>
+
+<p>At <a href="https://github.com/real-serious-games/">Real Serious Games</a> we translated the promises pattern to C# and it immediately enabled a design improvement in our async code for tasks such as loading assets. In these cases it is typically preferred <a href="http://en.wikipedia.org/wiki/Asynchronous_I/O">to load asynchronously rather than to block</a> and get a callback when the load has completed. This frees up the thread for other processing or simply just for keeping the UI responsive.</p>
+
+<p>Let's work through some examples so you'll understand the basics of promises.</p>
+
+<p>An async operation is usually started by a function that returns a promise, so let's start with such a function:</p>
+
+<pre><code>public IPromise&lt;MyAsset&gt; LoadAsset(string assetPath)
+{
+    // ...
+}
+</code></pre>
+
+<p><em>LoadAsset</em> initiates a promise-based async operation: </p>
+
+<pre><code>var promise = new Promise&lt;MyAsset&gt;();
+
+// ... start the async operation ...
+
+return promise;
+</code></pre>
+
+<p>The async operation is started before returning the promise. The caller can immediately use the returned promise (via its <em><a href="http://en.wikipedia.org/wiki/Fluent_interface">fluent API</a></em>) even though the asynchronous operation is still in flight and has not yet completed.</p>
+
+<p>Upon completion of the async operation, in <em>whatever way</em> that notification actually occurs, <em>LoadAsset</em> resolves the promise:</p>
+
+<pre><code>promise.Resolve(theLoadedAsset);
+</code></pre>
+
+<p>Resolving the promise triggers a pipeline of downstream callbacks that have been defined by the caller using functions such as <em>Then</em>, <em>ThenAll</em> and <em>Done</em>.</p>
+
+<p>The simplest pipeline simply uses <em>Done</em> to attach a callback as the last stage of the pipeline: </p>
+
+<pre><code>LoadAsset(someAssetPath)
+    .Done(myAsset =&gt; OnAssetLoaded(myAsset));
+</code></pre>
+
+<p>Multiple operations can be chained using <em>Then</em>, for example loading a linked asset:</p>
+
+<pre><code>LoadAsset(someAssetPath)
+    .Then(myAsset =&gt; LoadAsset(myAsset.LinkedAssetPath))
+    .Done(nextAsset =&gt; OnAssetLoaded(nextAsset));
+</code></pre>
+
+<p>The <a href="http://www.codeproject.com/Tips/298963/Understand-Lambda-Expressions-in-minutes">anonymous function</a> that defines the callback at each pipeline stage is invoked only after the preceding stage has resolved. Each pipeline stage returns a new promise that represents a new async operation which must complete before the pipeline can continue to the next stage (or the final stage as specified by <em>Done</em> in this case).  </p>
+
+<p>This is a trivial example, but hopefully you are starting to see the power of promises.</p>
+
+<p>Let's up the ante. For the RSG Promise library we have added a new function that allows multiple dependent promises to be chained. This example uses <em>ThenAll</em> to load multiple linked assets:</p>
+
+<pre><code>LoadAsset(someAssetPath)
+    .ThenAll(myAsset =&gt; 
+        myAsset.LinkedAssets.Select(path =&gt; LoadAsset(path))
+    )
+    .Done(linkedAssets =&gt; OnAllAssetsLoaded());
+</code></pre>
+
+<p><em>ThenAll</em> is passed a callback that returns an <a href="https://msdn.microsoft.com/en-us/LIBRary/9eekhta0(v=vs.90).aspx"><em>collection</em></a> of promises. All of these promises must complete before the pipeline continues. <a href="http://spin.atomicobject.com/2013/11/18/linq-functional-c/">LINQ</a> <em><a href="https://msdn.microsoft.com/en-us/library/system.linq.enumerable.select(v=vs.100).aspx">Select</a></em> transforms the <em>collection of linked assets</em> into a <em>collection of promises</em> to load those assets. As C# programmers we prefer LINQ's <a href="https://msdn.microsoft.com/en-us/library/bb397947.aspx"><em>method syntax</em> over its <em>query syntax</em></a>.  </p>
+
+<p>The great thing about promises is just how easy it is to manage chained sequences of async operations. Need to insert a new operation into your pipeline? The pipeline is easily modified:</p>
+
+<pre><code>LoadAsset(someAssetPath)
+    .ThenAll(myAsset =&gt; 
+        myAsset.LinkedAssets.Select(path =&gt; LoadAsset(path))
+    )
+    .Then(linkedAssets =&gt; SomeOtherAsyncOperation(linkedAssets))
+    .Then(somethingElse =&gt; AndAnotherAsyncOperation(somethingElse))
+    .Done(somethingElseAgain =&gt; OnAllAssetsLoaded(somethingElseAgain));
+</code></pre>
+
+<p>The C# promises library and documentation <a href="https://github.com/Real-Serious-Games/C-Sharp-Promise">is available on github</a>.  </p>
+
+<h2>
+<a id="promises-to-the-rescue-in-game-dev" class="anchor" href="#promises-to-the-rescue-in-game-dev" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises to the Rescue in Game Dev</h2>
+
+<p>There are many situations in game development that require waiting for some async operation to complete or for some condition to be fulfilled. Here are some examples:</p>
+
+<ul>
+<li>Downloading files or data from a network</li>
+<li>Playing a particle effect at the end of an animation</li>
+<li>Playing a sound effect at the end of an animation</li>
+<li>Moving a camera to a certain position</li>
+<li>Waiting for the player to die</li>
+<li>Waiting for the player to lose all their lives</li>
+<li>Waiting for user input</li>
+<li>Waiting for a timer to run out</li>
+<li>Waiting for all requirements of an achievement to be met</li>
+</ul>
+
+<p>In the following sections we will work through examples (from basic to more advanced) of promises used specifically for game development.</p>
+
+<h3>
+<a id="promises-for-asynchronous-asset-loading" class="anchor" href="#promises-for-asynchronous-asset-loading" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for Asynchronous Asset Loading</h3>
+
+<p>Games often need asynchronous operations. Either for loading and initialisation or for runtime operations that execute over multiple frames.  </p>
+
+<p>At startup a level and other assets must be loaded. Maybe data is pulled from a database in the cloud. Initialisation of other systems may depend on the loading of this data. </p>
+
+<p>A naive attempt might be frequent polling to see if the loading has completed:</p>
+
+<pre><code>public void Update(float deltaTime)
+{
+    if (!gameLoaded)
+    {
+        if (gameLoadFinished)
+        {
+            // Loading has finished.
+            gameLoaded = true;            
+            // Initialize systems...
+        }
+        else 
+        {
+            // Not loaded yet, maybe progress the loading screen animation.
+            return;
+        }
+    }
+    else 
+    {
+        // Game is loaded...
+        // Update AI, world, etc.
+    }
+}
+</code></pre>
+
+<p>Now polling can be useful but it is often <a href="http://stackoverflow.com/questions/320284/what-is-wrong-with-polling">considered a bad practice</a>. And you see that it is clunky and inelegant. </p>
+
+<p>This style of coding gets complicated quickly as initialisation dependencies are added. Not to mention the other issues we really should be considering. How do we handle and recover from failure? Do we poll yet another variable that indicates an error condition? </p>
+
+<p>Polling like this brings to mind the <em>pull model</em> of computing in which we <em>ask</em> objects about state changes. <a href="http://www.introtorx.com/content/v1.0.10621.0/01_WhyRx.html">According to Lee Campbell</a> the world has already moved to the <em>push model</em>, but us developers are still catching up. In the push model we are <em>notified</em> of state changes instead of having to <em>ask</em>.</p>
+
+<p>You are already in the <em>push model</em> realm if you are using <a href="https://msdn.microsoft.com/en-us/library/edzehd2t(v=vs.110).aspx">C# events</a>. Something like this:</p>
+
+<pre><code>public void Startup()
+{
+    // No need to poll, this event will notify 
+    // when the level has been loaded. 
+    levelLoader.LevelLoaded += levelLoader_LevelLoaded; 
+    levelLoader.Load("SomeLevel");            
+} 
+
+private void levelLoader_LevelLoaded(object sender, LevelLoadedEventArgs e)
+{
+    // Initialize dependent systems...
+}
+</code></pre>
+
+<p>C# events are better but the code can still get complicated very quickly. Imagine having a spider web of asynchronous dependencies that must be resolved before your game starts. How far can you go with C# events? Again, the confusion rises sharply as the complexity increases and the code becomes more difficult to manage and maintain.</p>
+
+<p>Moving on from events we can use <a href="http://stackoverflow.com/questions/2139812/what-is-a-callback">callbacks</a> (with anonymous methods) <a href="http://stackoverflow.com/questions/2020381/when-to-use-callbacks-instead-of-events-in-c">instead of events</a>, a technique that is ubiquitous in Javascript and <a href="http://en.wikipedia.org/wiki/Lua_(programming_language)">Lua</a>:</p>
+
+<pre><code>public void Startup()
+{
+    levelLoader.Load("SomeLevel", loadedLevel =&gt;
+    {
+        // Initialize dependent systems...
+    });
+}
+</code></pre>
+
+<p>You can get a lot of mileage out of callbacks. They better allow for a chain of loading and initialization:</p>
+
+<pre><code>public void Startup()
+{
+    // Load the level.
+    levelLoader.Load("SomeLevel", loadedLevel =&gt; 
+    {
+        // After level has loaded, load behaviours required by the level.
+        behaviorLoader.LoadBehaviors(loadedLevel.RequiredBehaviours, 
+            loadedBehaviors =&gt;
+            {
+                // Initialise dependent systems...
+            }
+        );
+    });
+}
+</code></pre>
+
+<p>The problem with callbacks is that they lead to deep nesting of anonymous functions and much resulting confusion. This is a problem so prevalent that is has been given the name <a href="http://callbackhell.com/">callback hell</a>.   </p>
+
+<p>So this is where we arrive at promises. You need a better tool to structure and manage your complex asynchronous code. If you can appreciate the problems described already in this article, then promises are going to be a welcome addition to your toolbox.</p>
+
+<p>The methods presented above can very quickly turn into a tangled web of code that is difficult to debug, test and maintain. Using Promises you can layout your chain of dependencies in an elegant and readable manner: </p>
+
+<pre><code>levelLoader.LoadLevel("SomeLevel")
+    .Then(loadedLevel =&gt; LoadSomethingElse(loadedLevel))
+    .Then(loadedLevel =&gt; LoadAnotherThing(loadedLevel)))
+    .Done(loadedLevel =&gt; StartGame(loadedLevel));
+</code></pre>
+
+<p>I'm sure you can agree that promises make this sort of thing much more understandable, not to mention easy to modify.</p>
+
+<p>Another nice thing about promises: gradually refactoring of your code is possible to convert to promises. We know because we did this, incrementally replacing Unity coroutines with promises (and testing very carefully at each stage).</p>
+
+<p>This is really just a taster of what promises can do. We need to explore them in more depth so you'll understand how transformative they can be for your development process.    </p>
+
+<h3>
+<a id="promises-for-composing-game-logic" class="anchor" href="#promises-for-composing-game-logic" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for Composing Game Logic</h3>
+
+<p>Promise have a powerful ability to compose sequences of operations via the fluent API. We have extended the promises specification by adding composition operators to solve problems specific to game development. In this section we will look at these new operators. <em>All</em> for composing parallel operations, <em>Race</em> for completing when the first parallel operation completes and <em>Sequence</em> for scheduling a collection of sequential operations.  </p>
+
+<h4>
+<a id="promiseall" class="anchor" href="#promiseall" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promise.All</h4>
+
+<p><em>All</em> packages up multiple promises, the resulting promise resolves only when all of the packaged promises have resolved.</p>
+
+<p>This can be very useful in a number of situations. For example an achievement system. Imagine a puzzle game with an achievement that is unlocked after the player has played the game for 20 minutes and finished 10 levels in that time:</p>
+
+<pre><code>IPromise OpeningGambitAchievement()
+{
+    return Promise.All(
+        WaitForTimeSpentOnPuzzles(60 * 20),
+        FinishedSpecificNumberOfLevels(10)
+    );
+} 
+</code></pre>
+
+<p><em>WaitForTimeSpentOnPuzzles</em> and <em>FinishedSpecificNumberOfLevels</em> are both functions that return promises. What they are doing internally will be explained later, for now it is important to understand that the promise returned by <em>OpeningGambitAchievement</em> will resolve when <em>both</em> of the inner promises have resolved, regardless of how far apart those two events occur.</p>
+
+<p>To use this promise, you simply fire and forget:</p>
+
+<pre><code>OpeningGambitAchievement()
+    .Done(() =&gt; ShowAchievementNotification("OpeningGambit");
+</code></pre>
+
+<p><em>All</em> can also take a collection of promises to resolve, e.g. a collection of objectives the player must complete:</p>
+
+<pre><code>IEnumerable&lt;IPromise&gt; ObjectivesToComplete()
+{
+    // ... return a collection of promises ...
+}
+</code></pre>
+
+<p>It is now easy to receive a notification when the player has completed the objectives:</p>
+
+<pre><code>Promise.All(ObjectivesToComplete())
+    .Done(() =&gt; OnObjectivesCompleted()); 
+</code></pre>
+
+<p><em>All</em> can be used within a chain via <em>ThenAll</em>:</p>
+
+<pre><code>LoadLevel(someLevel)
+    .ThenAll(theLevel =&gt; ObjectivesToComplete(theLevel))
+    .Done(() =&gt; OnLevelCompleted());
+</code></pre>
+
+<h4>
+<a id="promiserace" class="anchor" href="#promiserace" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promise.Race</h4>
+
+<p><em>Race</em> is similar to <em>All</em>, but it resolves immediately when the first inner promise resolves. Each of the promises are <em>racing</em> each other for completion. This allows us to easily build timeouts into our code. </p>
+
+<p>Imagine a situation where the user needs to provide some input, but there is a time limit on their opportunity to do so. In this example the returned promise resolves either on input from the player or after the timeout has expired, whichever comes first: </p>
+
+<pre><code>IPromise WaitForTimedUserInput(float timeoutSeconds)
+{
+    return Promise.Race(WaitForInput(), Timeout(timeoutSeconds));
+}
+</code></pre>
+
+<p>Be warned that the other inner promises will continue running until they complete. Although the <em>Race</em> promise resolves and invokes chained logic as soon as the first promise completes, the other promises will continue to run until completion. So be careful using promises that are making asynchronous state changes and causing side effects.</p>
+
+<p><em>Race</em> can be used within a chain via <em>ThenRace</em>.</p>
+
+<h4>
+<a id="promisesequence" class="anchor" href="#promisesequence" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promise.Sequence</h4>
+
+<p>Some scenarios, for example animating a dynamically generated sequence of movements, can be simplified using the <em>Sequence</em> function. If you may have a hard-coded sequence of operations: </p>
+
+<pre><code>PromiseOne()
+    .Then(PromiseTwo())
+    .Then(PromiseThree())
+    .Then(PromiseFour())
+    // ... etc ...
+    .Done();
+</code></pre>
+
+<p><em>Sequence</em> is needed to change this to a dynamic generated collection of operations (possibly loaded from data).</p>
+
+<p><em>Sequence</em> is given a collection of functions, each returning a promise. Each function is invoked in-turn one after the other, but only after the previous promise has resolved. This enables a sequence of asynchronous operations to be executed serially:</p>
+
+<pre><code>IEnumerable&lt;Func&lt;IPromise&gt;&gt; GenerateMovementSequence()
+{
+    // Generate a collection functions that each initiate an async operation 
+    // and returns a promise. 
+}     
+
+Promise.Sequence(GenerateMovementSequence())
+    .Done(() =&gt;
+    {
+        // The sequence has completed.
+    });
+</code></pre>
+
+<p>This sounds more complicated than it actually is. We need a collection of functions, rather than a collection of promises, since we need to hold off starting each async operation until its turn arrives. We can't simply pass in a collection of promises, as already having a promise implies that the async operation has already started, meaning that every operation in the sequence would start at the same time and this is not what we want (this is what <em>All</em> does). So <em>Sequence</em> must take functions that are yet to be called.</p>
+
+<p>As an example, let's say we have an NPC guard who follows a series of waypoints. When the behaviour is completed the NPC is reset to later be triggered again by the player. </p>
+
+<p>We could use promises in the way mentioned above, chaining together <em>Then</em>s to build a sequence that moves the NPC over time through each of the waypoints. This means we need to know the waypoints at compile time. We’d like to make this data driven, loading the set of waypoints from data. This is a perfect opportunity for <em>Sequence</em>.</p>
+
+<p>Let's assume we have  a function for moving our NPC that returns a promise. The promise resolves when the NPC has moved into position:</p>
+
+<pre><code>IPromise MoveToPosition(Vector3 endPosition, float movementSpeed);     
+</code></pre>
+
+<p>This would be enough for us to manually chain it. But to use <em>Sequence</em> we need to return a function that returns a promise, allowing <em>Sequence</em> to call it at the right time:</p>
+
+<pre><code>Func&lt;IPromise&gt; PrepMoveToPosition(Vector3 endPosition, float movementSpeed)
+{
+    return () =&gt; MoveToPosition(endPosition, movementSpeed);
+}
+</code></pre>
+
+<p><em>PrepMoveToPosition</em> wraps <em>MoveToPosition</em> in an anonymous function and returns the new function. This allows us to build a collection of such functions to pass to <em>Sequence</em>:</p>
+
+<pre><code>Vector3[] waypoints = ... loaded from data ...    
+
+void MoveAlongWaypoints(float movementSpeed)
+{
+    // Generate collection of functions for moving through the way points.
+    var moves = waypoints
+        .Select(waypoint =&gt; PrepMoveToPosition(waypoint, movementSpeed);
+
+    Promise.Sequence(moves)
+        .Done(() =&gt; Reset()) // Reset the NPC ready to be triggered again.
+}
+</code></pre>
+
+<p>You can see how promises not only enable, but encourage us to separate our logic, breaking our functions down to tight, logical components that are easy to read and manage.</p>
+
+<p><em>Sequence</em> can be used within a chain via <em>ThenSequence</em></p>
+
+<h3>
+<a id="promises-for-time-based-logic" class="anchor" href="#promises-for-time-based-logic" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for time based logic</h3>
+
+<p>Using promises in the above scenarios has clear benefits, however they really hit their full potential when we extend promises factor in time.</p>
+
+<p>Most game developers will have used a timer in some way, tracking time is a necessary and important part of game development. Examples include power ups that last for a limited amount of time, end conditions based on time taken, time per lap in a racing game and at the top end of complexity, entire cutscenes that are sequences of many timed operations. </p>
+
+<p>In it's simplest form a timer is used to trigger logic after a certain amount of time has passed. Once-off, this is a simple problem to solve in code. It’s a floating point value that is incremented by <a href="https://unity3d.com/learn/tutorials/modules/beginner/scripting/delta-time">delta elapsed time</a> each update:</p>
+
+<pre><code>    void Update(float deltaTime)
+    {
+        curTime += deltaTime;
+
+        if (curTime &lt; triggerTime)
+        {
+            // Still counting towards the timer
+        }
+        else
+        {
+            // Time is up
+        }
+    }
+</code></pre>
+
+<p>This is a simple technique, but scaling up complicates things. Having multiple timer running becomes hard to debug and maintain. </p>
+
+<p>Let's consider a more complicated example.</p>
+
+<p>Imagine your player character is a shape changer and capable of taking on multiple forms, with each form having specific benefits. The player can only activate these forms from the human form and while changed they cannot control when they change back, which happens after a random amount of time. To further complicate this, while in each of these forms, the player can activate power-ups specific to that form, which also have their own timers.</p>
+
+<pre><code>class Character
+{
+    float currentFormTimer; // The amount of time left in the current form.
+
+    enum Form
+    {
+        Human,
+        Wolf,
+        Hawk,
+        Dolphin
+    }
+    Form currentForm = Form.Human;
+
+    float currentPowerupTimer;        
+
+    enum Powerup
+    {
+        None,
+        Werewolf,
+        HawkSpeed,
+        DolphinEcho
+    }
+    Powerup currentPowerup = Powerup.None;
+
+    public void Update(float deltaTime)
+    {
+        if (currentForm != Form.Human)
+        {
+            currentFormTimer -= deltaTime;
+
+            if (currentFormTimer &lt;= 0f)
+            {
+                // Return to human form
+                currentForm = Form.Human;
+
+                // Disable any powerups that were active
+                currentPowerup = Powerup.None;
+            }
+
+            if (currentPowerup != Powerup.None)
+            {
+                currentPowerupTimer -= deltaTime;
+                if (currentPowerupTimer &lt;= 0f)
+                {
+                    currentPowerup = Powerup.None;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>This example is still simple, but well on it's way too becoming overly complicated, also ugly and difficult to read.  You can imagine how it look as we add more features and more timers.</p>
+
+<p>With another extension to our promises library we can improve our use of timers. This will allow us to move this logic out of <em>Update</em> and into separate functions, each with a <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">clearly defined responsibility</a>. </p>
+
+<p>We have implemented the <em>PromiseTimer</em> class which can bridge the gap between promises and timers. The <em>WaitFor</em> function returns a  promise that resolves after the requested time has passed:</p>
+
+<pre><code>    PromiseTimer promiseTimer = new PromiseTimer();
+
+    promiseTimer.WaitFor(timeToWait)
+        .Done(() =&gt; 
+        {
+            // Time is up
+        });
+</code></pre>
+
+<p>Let’s define a convenience function within the same class:</p>
+
+<pre><code>PromiseTimer promiseTimer = new PromiseTimer();
+
+IPromise WaitFor(float timeToWait)
+{
+    return promiseTimer.WaitFor(timeToWait);
+}
+</code></pre>
+
+<p>Now somewhere our timers still must be updated. Let's do that in the <em>Character</em> class:</p>
+
+<pre><code>void Update(float deltaTime)
+{
+    promiseTimer.Update(deltaTime);
+}
+</code></pre>
+
+<p>Now let's rewrite the <em>Character</em> example using <em>WaitFor</em>. You'll remember the logic in the <em>Update</em>. Here we can move that out to appropriate helper functions.</p>
+
+<pre><code>class Character
+{
+    PromiseTimer promiseTimer = new PromiseTimer();
+
+    enum Form
+    {
+        Human,
+        Wolf,
+        Hawk,
+        Dolphin
+    }
+    Form currentForm = Form.Human;
+
+    enum Powerup
+    {
+        None,
+        Werewolf,
+        HawkSpeed,
+        DolphinEcho
+    }
+    Powerup currentPowerup = Powerup.None;
+
+    public void Update(float deltaTime)
+    {
+        promiseTimer.Update(deltaTime);
+    }
+
+    // Activates wolf mode if possible
+    public IPromise BeWolf()
+    {
+        if (currentForm != Form.Human)
+        {
+            // Resolve this promise straight away, 
+            // we already have one running for a transformation.
+            return Promise.Resolved(); 
+        } 
+
+        // Wait for a random time between 10 and 20 seconds
+        return RunTimer(Random.Range(10f, 20f)) 
+            .Then(() =&gt; currentForm = Form.Human); // Return to human mode.
+    }
+
+    ...
+
+    // Similar functions for the other transformations
+
+    ...
+
+    // Activate power-up.
+    public IPromise ActivateWerewolfPowerup()
+    {
+        if (currentForm != Form.Wolf || currentPowerup == Powerup.Werewolf)
+        {
+            return Promise.Resolved();
+        }
+
+        currentPowerup = Powerup.Werewolf;
+
+        return promiseTimer.WaitFor(Random.Range(1f, 5f))
+            .Then(() =&gt; currentPowerup = Powerup.Werewolf);
+    }
+}
+</code></pre>
+
+<p>And all our timer based logic is neatly handled for us by the <em>PromiseTimer</em>.</p>
+
+<p>You may have noticed the small problem with our shapechanger code! Should the <em>wolf form</em> time end before the werewolf power-up time, the power-up would remain active. We can address that easily by extending promises for conditional gating.</p>
+
+<h3>
+<a id="promises-for-conditional-gating" class="anchor" href="#promises-for-conditional-gating" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for Conditional Gating</h3>
+
+<p>You may have already picked up on the fact that <em>All</em>, <em>Race</em> and <em>Sequence</em> are very similar to the standard programming constructs <em>and</em>, <em>or</em> and <em>for</em>. Thinking about them in this way will help you understand how they can be used to construct conditional logic and behaviour. </p>
+
+<p>The <em>PromiseTimer</em> extends on these by adding the time-based conditional operations <em>WaitUntil</em> and <em>WaitWhile</em>.</p>
+
+<p><em>WaitUntil</em> returns a promise that resolves at some future time when our custom condition has evaluated to true. This condition could be a time limit, making it perform exactly the same as <em>WaitFor</em>, or it could be any other expression that returns a boolean result.</p>
+
+<p>In the last section we mentioned the logic error in the power-up function: </p>
+
+<pre><code>IPromise ActivateWerewolfPowerup()
+{
+    if (currentForm != Form.Wolf)
+    {
+        return Promise.Resolved();
+    }
+
+    return promiseTimer.WaitFor(Random.Range(1f, 5f));
+}
+</code></pre>
+
+<p>If <em>currentForm</em> should change after the <em>WaitFor</em> has started but before it finishes, meaning our character has reverted to human form, the werewolf powerup will remain active until it's time runs out, despite the character not being in wolf form anymore. This can be fixed with <em>WaitUntil</em>:</p>
+
+<pre><code>IPromise ActivateWerewolfPowerup()
+{
+    var powerupTime = Random.Range(1f, 5f);
+    return promiseTimer.WaitUntil(t =&gt;
+    {
+        return t.elapsedTime &gt;= powerupTime || currentForm != Form.Wolf);
+    });
+}
+</code></pre>
+
+<p>Here our promise will resolve once the time has run out, or the character is not a wolf, whichever comes first.</p>
+
+<p>Earlier, when talking about <em>Promise.All</em>, we talked about two promise-returning functions that were used to detect an achievement. They were <em>WaitForTimeSpentOnPuzzles</em> and <em>FinishedSpecificNumberOfLevels</em>. Both are very simple to construct using the <em>PromiseTimer</em>:</p>
+
+<pre><code>IPromise WaitForTimeSpentOnPuzzles(float seconds)
+{
+    return promiseTimer.WaitUntil(timeData =&gt; 
+    {
+        var timePlaying = 0f;
+        if (!paused)
+        {    
+            timePlaying += timeData.deltaTime;
+        }
+
+        return timePlaying &gt;= seconds;
+    });
+}
+
+IPromise FinishedSpecificNumberOfLevels(int levelCount)
+{
+    return promiseTimer.WaitUntil(_ =&gt; levelsCompleted &gt;= levelCount);
+}
+</code></pre>
+
+<p>Using <em>WaitUntil</em> we can quickly and easily build complicated systems that are still manageable. For instance, let us assume our crazy shapechanger game has a whacky achievement system. It has an achievement for completing a level with 1 second left on the clock, on a Tuesday, while in dolphin form (I don't know why you'd do this, but it could be fun). I'm sure you can imagine how complicated these types of achievements can be to code. Especially if your game has 150+ of them. We can use <em>WaitUntil</em> to monitor a complex set of conditions and dynamically respond:    </p>
+
+<pre><code>class LevelManager
+{
+    DateTime timeOfLevelStart;
+
+    Character character;
+    float curTimeRemaining; // The amount of time left on the clock
+    float totalLevelTime = 60f; // 1 minute to finish the level.
+    PromiseTimer promiseTimer = new PromiseTimer();
+
+    public LevelManager()
+    {
+        timeOfLevelStart = DateTime.Now();
+        curTimeRemaining = totalLevelTime;
+
+        // Timer for the level, 
+        // this time counting down so we can catch that last second
+        promiseTimer.WaitUntil(timeData =&gt; 
+            {
+                curTimeRemaining = totalLevelTime - timeData.elapsedTime;
+                return curTimeRemaining &lt;= 0;
+            })
+            .Done();
+
+        promiseTimer.WaitUntil(_ =&gt;
+            {
+                return 
+                    timeOfLevelStart.DayOfTheWeek == DayOfTheWeek.Tuesday &amp;&amp;
+                    character.IsInDolphinMode &amp;&amp;
+                    curTimeRemaining &lt;= 1f &amp;&amp;
+                    curTimeRemaining &gt; 0f; 
+            })
+            .Then(() =&gt; ShowAchievementNotification("NailedItOnDolphinDay"))
+            .Done();
+    }
+}
+</code></pre>
+
+<h4>
+<a id="nested-promises" class="anchor" href="#nested-promises" aria-hidden="true"><span class="octicon octicon-link"></span></a>Nested Promises</h4>
+
+<p>We have already seen examples of promises nested within other promises, now let's take a more in-depth look at using them.</p>
+
+<p>Imagine we are building a game that has a tutorial at the beginning. The tutorial shows some action, then pauses while it waits for the player to interact in a specific manner before moving on. We can construct this by building a larger promise from smaller promises:</p>
+
+<pre><code>IPromise MoveCamera(Vector3 endPosition, float durationSeconds)
+{
+    var startPosition = camera.CurPosition; 
+    return promiseTimer.WaitUntil(timeData =&gt;
+        {
+            camera.CurPosition = Vector3.Lerp(
+                startPosition, 
+                endPosition, 
+                timeData.elapsedTime / durationSeconds
+            );
+
+            return IsPositionCloseEnough(camera.CurPosition, endPosition); 
+        });
+} 
+</code></pre>
+
+<p>OK so nothing new yet. Now a function that waits for player input:</p>
+
+<pre><code>IPromise WaitForKeyInput(KeyCode key)
+{
+    return promiseTimer.WaitUntil(_ =&gt; InputManager.GetKey(key));
+}
+</code></pre>
+
+<p>Now we sequence textual information, allowing the option of waiting for the user to press space to progress from one message to another. The boolean makes it optional because it isn't needed for the last text box in the sequence:</p>
+
+<pre><code>Func&lt;IPromise&gt; PrepTextBoxesForStage(string text, bool waitForInput)
+{
+    return () =&gt;
+    {
+        TextBox.Text = text;
+        TextBox.Show(); // Sets up the text and displays it on screen.
+        if (waitForInput)
+        {
+            return WaitForKeyInput(KeyCode.Space);
+        }
+
+        return Promise.Resolved();
+    }
+}
+</code></pre>
+
+<p>Now let’s build the sequence for the tutorial. We move the camera to a certain position, show 1 or more messages and wait for input:</p>
+
+<pre><code>Func&lt;IPromise&gt; PrepTutorialStage(
+    Vector3 cameraPosition, 
+    string[] texts, 
+    KeyCode key
+)
+{
+    // If the index is the last one in the array, 
+    // then we don't want to wait for the user's input
+    var textBoxes = texts.Select(
+        (text, index) =&gt; 
+            PrepTextBoxesForStage(text, index != texts.length - 1)
+    );
+    return () =&gt;
+    {
+        return MoveCamera(cameraPosition, 2f)
+            .ThenSequence(() =&gt; textBoxes)
+            .Then(() =&gt; WaitForKeyInput(key));
+    }
+}
+</code></pre>
+
+<p>Next we'll assume that we have our stages described in a database or spreadsheet from which we can load a collection of <em>TutorialStage</em> structures:</p>
+
+<pre><code>struct TutorialStage
+{
+    public Vector3 Position;
+    public string[] Texts;
+    public KeyCode key;
+}
+</code></pre>
+
+<p>Finally pulling it altogether into a very small function, which returns a promise that resolves when the tutorial has completed:</p>
+
+<pre><code>IPromise RunTutorial(IEnumerable&lt;TutorialStage&gt; tutorialData)
+{
+    var tutorialStages = tutorialData
+        .Select(data =&gt; 
+            PrepTutorialStage(data.Position, data.Texts, data.key)
+        );
+
+    return Promise.Sequence(tutorialStages);
+}
+</code></pre>
+
+<p>Phew, now we have a sequence of tutorial steps each customised to context, able to wait for user interaction, driven by data and with each part of the process separated and isolated. For a more specific implementation of this we have set up a Unity project demonstrating it. Please feel free to pull it down and poke around the code. It can be found here <a href="https://github.com/adamsingle/PromisesUnityDemo">on GitHub</a></p>
+
+<h2>
+<a id="promises-vs-unity-coroutines" class="anchor" href="#promises-vs-unity-coroutines" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises vs Unity Coroutines</h2>
+
+<p>Promises are an alternative to <a href="http://docs.unity3d.com/Manual/Coroutines.html">coroutines</a> in Unity. Coroutines have their place in our toolbox, but we prefer promises. If you have ever used coroutines to any degree of complexity you will know that the ability to comprehend them diminishes quickly as the code gets more complex</p>
+
+<p>Coroutines in Unity build on C# <a href="https://msdn.microsoft.com/en-us/library/dscyy5s0.aspx">iterators</a>. Unity has control here... it runs our coroutine which returns an iterator. Unity then steps that iterator forward, element by element, advancing the execution of the iterator. Each time our coroutine <a href="https://msdn.microsoft.com/en-us/library/9k7k7cf0.aspx">yields</a> we give control back to Unity, in the future Unity steps the iterator forward again allowing our coroutine to progress until it yields again or finally completes.</p>
+
+<p>Promises are from the Javascript world and Javascript doesn't have coroutines, although <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators">generators</a> are coming in <a href="http://es6-features.org/">ES6</a> and people are already talking about how to do <a href="http://syzygy.st/javascript-coroutines/">coroutines in Javascript</a> and the <a href="https://medium.com/code-adventures/callbacks-vs-coroutines-174f1fe66127">pros</a> and <a href="http://calculist.org/blog/2011/12/14/why-coroutines-wont-work-on-the-web/">cons</a> of doing so. Coroutines seem to inspire equal measures of love and hate. </p>
+
+<p>Of course we believe the use of promises results in more expressive and maintainable code than using coroutines.</p>
+
+<p>However, coroutines do have one major advantage: it is much easier to read the flow of the code. This makes it easier to debug a linear sequence of code (even though overall debugging effectiveness is greatly reduced with coroutines). The only thing that gets in the way of reading the flow of the code is the frequent requirement to use <em>yield return ...</em> as opposed to <em>Then</em>, <em>ThenAll</em> and similar functions when working with promises. Both get in your way, but in coroutines it is definitely easier to read and debug over a short linear sequence of code. </p>
+
+<p>While this is the only advantage to using coroutines, there are multiple disadvantages.</p>
+
+<p>It is difficult to build larger coroutines out of smaller coroutines. Nested coroutines are tough to manage, you can do it of course but at first it isn't obvious how to achieve it. Sure, it’s simple enough if you’ve done it once or twice. Try doing it 100s of times. On the other hand promises can be stitched together and nested in many ways to produce larger sequences of logic. This sort of <a href="http://en.wikipedia.org/wiki/Composability">composability</a> results in better <a href="http://en.wikipedia.org/wiki/Reusability">code reuse</a>. You'll end up with a library of higher-level promise-returning functions for common logic that you can compose to build new behaviour creating new and different game logic. Recomposing and rewiring promises is trivial and increases your ability for fast experimentation, something that is essential to being productive while searching for the tweaks that put the fun in your game.</p>
+
+<p>Another problem with coroutines is the lack of control you have over them. Unity runs coroutines automatically, you don't have any control over when and how coroutines are advanced and you have no idea what coroutines are running at any particular point. This is why coroutines are particularly hard to debug (even though debugging a single coroutine is in fact easier). This is a complete disaster for understanding what your code is doing. The only control you have over coroutines is the ability to yield from within the coroutine (thus giving control back to Unity) or you can stop one or all coroutines. </p>
+
+<p>Stopping a single coroutine has its own problems. We can only stop it by specifying the name of the coroutine as a <a href="http://en.wikipedia.org/wiki/Magic_string">magic string</a> (everyone knows this is bad right?). This impacts the <a href="http://en.wikipedia.org/wiki/Type_safety">type-safety</a> of our code and breaks the automated refactoring tools in Visual Studio. Single promises or a group of promises can easily be stopped by stopping the <em>PromiseTimer</em> that is responsible for them. No <a href="http://en.wikipedia.org/wiki/Magic_string">magic strings</a> are necessary to achieve this.       </p>
+
+<p>Using the <em>PromiseTimer</em> gives us back control. We can update promises wherever we want and (when debugging is enabled) we can display a list of the promises that are currently running. We can use multiple <em>PromiseTimer</em>s to control different groups of promises in different ways, for instance we could pause a group of promises while we allow another group to continue running. </p>
+
+<p>Want to know the major disadvantage of using coroutines? They can only be used from a <a href="http://docs.unity3d.com/ScriptReference/MonoBehaviour.html">MonoBehaviour</a>. If you use coroutines then your code is <a href="http://en.wikipedia.org/wiki/Coupling_(computer_programming)">tightly coupled</a> to Unity and there is no chance that you'll run your code outside of it. This drastically limits opportunities for code reuse and test driven development. If you don't understand the need for this, maybe it won't be a problem for you, go ahead and use coroutines.</p>
+
+<h2>
+<a id="almost-behaviour-trees" class="anchor" href="#almost-behaviour-trees" aria-hidden="true"><span class="octicon octicon-link"></span></a>Almost Behaviour Trees?</h2>
+
+<p>As we worked with promises and extended them for game development we started to get the feeling that we were almost reinventing <a href="http://en.wikipedia.org/wiki/Behavior_Trees_(artificial_intelligence,_robotics_and_control)">behaviour trees</a>.</p>
+
+<p>We weren't quite building AI (what behaviour trees are for). We were building interactive game behaviour. Sequencing sound, animation, user interaction, etc. Sequencing the flow of levels and the evaluation of the conditions required to progress to the next level.</p>
+
+<p>Promises (as we use them) and behaviour trees have some overlapping functionality...</p>
+
+<p>With the extended promises API we can run async operations in parallel (using <em>All</em> and <em>ThenAll</em>). This is very similar to using a <a href="http://aigamedev.com/open/article/parallel/"><em>parallel node</em></a> in a behaviour tree.</p>
+
+<p>We can run async operations sequentially (using <em>Sequence</em> and <em>ThenSequence</em>) and this is very similar to using a <a href="http://aigamedev.com/open/article/sequence/"><em>sequence node</em></a> in a behaviour tree.</p>
+
+<p>Promises can be nested hierarchically. That is to say that promises can have nested promises and the parent promise will resolve when its child promise(s) have resolved. Behaviour trees as well can be nested, they are after all a <a href="http://en.wikipedia.org/wiki/Tree_(data_structure)">tree</a>, an inherently <a href="http://en.wikipedia.org/wiki/Recursion_(computer_science)">recursive</a> data structure. </p>
+
+<p>Behaviour trees have a <a href="http://aigamedev.com/open/article/selector/"><em>selector node</em></a>, to which there is no corresponding feature in the promises API, not that it would be difficult to add one should it be needed.</p>
+
+<p>When you come to the limits of promises you may want to consider using behaviour trees, they have a number of advantages over promises... </p>
+
+<p>Behaviour trees are typically data-driven and built by game designers using an editor. This allows non-programmers to directly build, tweak and balance and is the ideal way to build game logic and AI. For indie game devs it may not be an option to use a behaviour tree editor and it may not even be an option to actually have a game designer as often the programmer will also be the game designer. In these situations code-driven game AI can work very well. We have certainly pushed promises very far already in this space and have been very happy with the result. We can however <em>imagine</em> a code-driven fluent-API for behaviour trees that would better suit us in some circumstances. </p>
+
+<p>Behaviour trees are easier to control. They are designed to be paused, stopped, restarted, etc. Promises are not designed to do these things, although we can at least pause or stop a time-based promise that is running via the <em>PromiseTimer</em>, however it is difficult if not impossible to stop a mid-flight asynchronous operation such as awaiting the result of an network transaction. It's not that we can't work around these issues with promises, but if you take promises far enough that you hit these issues, you might want to start thinking about using behaviour trees. What we’re saying is you should use promises where they are useful… and bring in behaviour trees for those areas where promises become unwieldy.</p>
+
+<p>Debugging can also be much easier for behaviour trees depending on the situation. If you have the luxury of having a behaviour tree editor you may also have some kind of visual behaviour tree debugger. This is great, but of course there is no substitute for debugging real code in a real debugger to work out what is going on. Debugging promises can be difficult, but at least you get to do it in a real debugger. We imagine that our fantasy behaviour tree fluent-API is easier to debug than the promises API.</p>
+
+<h2>
+<a id="conclusion" class="anchor" href="#conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion</h2>
+
+<p>Through this article we have described our experience using the promises pattern for game development. Any advanced technique has both benefits and disadvantages and you should be well informed, understand the risks and make educated decisions on which tech to bring into your development process.</p>
+
+<p>Bringing the wrong technique or technology into your process can be disastrous. All things have their places, but used badly or in the wrong situation they can negatively impact your productivity, so be careful and have a plan B for when a particular technology doesn't work for you. </p>
+
+<p>Make sure you plan time to learn. You can't rush into something and expect to be effective with it immediately. You need to understand the situations where it is useful and understand how to workaround and mitigate the potential pitfalls.</p>
+
+<p>Please don't let this turn you off! We just want to make sure you are aware of what you are getting yourself into. By all means jump in and explore promises and we hope this article has helped you prepare for that. Just be aware that any advanced technology can be a black hole... </p>
+
+<p>Please go to github to download the C# promises library and <em>PromiseTimer</em>: <a href="https://github.com/Real-Serious-Games/c-sharp-promise">https://github.com/Real-Serious-Games/c-sharp-promise</a>.</p>
+
+<p>The Unity example can be found here: <a href="https://github.com/adamsingle/PromisesUnityDemo">https://github.com/adamsingle/PromisesUnityDemo</a></p>
+
+<p>Thanks for reading.
+Ash and Adam.</p>
+
+<h2>
+<a id="about-the-authors" class="anchor" href="#about-the-authors" aria-hidden="true"><span class="octicon octicon-link"></span></a>About the Authors</h2>
+
+<h3>
+<a id="ashley-davis" class="anchor" href="#ashley-davis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ashley Davis</h3>
+
+<p>Ash is a software developer living and working in Brisbane, Australia. </p>
+
+<p>He has been developing games professionally since 1998 with a few interludes in other industries. In 2012 Ash moved into the world of serious games and simulations taking on the role of Lead Developer at Real Serious Games where he uses his experience to make game technology work for business. </p>
+
+<p>Ash is both a full time developer and a contractor under the name <a href="www.codecapers.com.au"><em>Code Capers</em></a> and is working on cloud and mobile products. </p>
+
+<p>Ash regularly contributes to the open source community and is a founder and organiser of games industry meetups in Brisbane: Game Technology Brisbane and Game Development Brisbane.</p>
+
+<p>For a longer bio please see Ash's profile on <a href="https://au.linkedin.com/in/ashleydavis75">linked in</a>.</p>
+
+<h3>
+<a id="adam-single" class="anchor" href="#adam-single" aria-hidden="true"><span class="octicon octicon-link"></span></a>Adam Single</h3>
+
+<p>Adam is a Husband, Father, Professional Developer, Indie Developer, lover of music and gamer. He's the coder for 7Bit Hero, a programmer on the tech team at Real Serious Games, co founder, programmer and co designer at Sly Budgie and co organiser of the Game Technology and Game Development Brisbane Meetups.</p>
+
+<p>Since entering the professional game development industry in 2011, Adam has worked on numerous mobile games, including the Android hit Photon and a pre-install game designed for specific Disney Japan handsets. He's been the programmer on a team that created a huge, interactive display at Queensland University of Technology's amazing multi touch screen installation The Cube as a part of Australia's first Digital Writing Residency and worked on a team at Real Serious Games creating large scale, interactive simulations for the mining and construction industries, some of which are Virtual Reality based solutions using the Oculus Rift. All of this has been done using the Unity game engine.</p>
+
+<p>Adam has a passion for the unique and engaging possibilities inherent in modern technology. When he's not working on exciting new game mechanics for Sly Budgie, he's experimenting with “home made VR” using mobile phone technology, building mobile applications utilizing modern web development technologies and pushing the exciting ideas behind 7Bit Hero's live music/multiplayer game interaction down whichever fascinating path it should happen to lead.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
