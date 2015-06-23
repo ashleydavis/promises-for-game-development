@@ -315,7 +315,7 @@ private void levelLoader_LevelLoaded(object sender, LevelLoadedEventArgs e)
 <h3>
 <a id="promises-for-composing-game-logic" class="anchor" href="#promises-for-composing-game-logic" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for Composing Game Logic</h3>
 
-<p>Promise have a powerful ability to compose sequences of operations via the fluent API. We have extended the promises specification by adding composition operators to solve problems specific to game development. In this section we will look at these new operators. <em>All</em> for composing parallel operations, <em>Race</em> for completing when the first parallel operation completes and <em>Sequence</em> for scheduling a collection of sequential operations.  </p>
+<p>Promises have a powerful ability to compose sequences of operations via the fluent API. We have extended the promises specification by adding composition operators to solve problems specific to game development. In this section we will look at these new operators. <em>All</em> for composing parallel operations, <em>Race</em> for completing when the first parallel operation completes and <em>Sequence</em> for scheduling a collection of sequential operations.  </p>
 
 <h4>
 <a id="promiseall" class="anchor" href="#promiseall" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promise.All</h4>
@@ -382,7 +382,7 @@ private void levelLoader_LevelLoaded(object sender, LevelLoadedEventArgs e)
 <h4>
 <a id="promisesequence" class="anchor" href="#promisesequence" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promise.Sequence</h4>
 
-<p>Some scenarios, for example animating a dynamically generated sequence of movements, can be simplified using the <em>Sequence</em> function. If you may have a hard-coded sequence of operations: </p>
+<p>Some scenarios, for example animating a dynamically generated sequence of movements, can be simplified using the <em>Sequence</em> function. You may have a hard-coded sequence of operations: </p>
 
 <pre><code>PromiseOne()
     .Then(PromiseTwo())
@@ -392,13 +392,13 @@ private void levelLoader_LevelLoaded(object sender, LevelLoadedEventArgs e)
     .Done();
 </code></pre>
 
-<p><em>Sequence</em> is needed to change this to a dynamic generated collection of operations (possibly loaded from data).</p>
+<p><em>Sequence</em> is needed to change this to a dynamically generated collection of operations (possibly loaded from data).</p>
 
 <p><em>Sequence</em> is given a collection of functions, each returning a promise. Each function is invoked in-turn one after the other, but only after the previous promise has resolved. This enables a sequence of asynchronous operations to be executed serially:</p>
 
 <pre><code>IEnumerable&lt;Func&lt;IPromise&gt;&gt; GenerateMovementSequence()
 {
-    // Generate a collection functions that each initiate an async operation 
+    // Generate a collection of functions that each initiate an async operation 
     // and returns a promise. 
 }     
 
@@ -450,7 +450,7 @@ void MoveAlongWaypoints(float movementSpeed)
 <h3>
 <a id="promises-for-time-based-logic" class="anchor" href="#promises-for-time-based-logic" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promises for time based logic</h3>
 
-<p>Using promises in the above scenarios has clear benefits, however they really hit their full potential when we extend promises factor in time.</p>
+<p>Using promises in the above scenarios has clear benefits, however they really hit their full potential when we extend promises to factor in time.</p>
 
 <p>Most game developers will have used a timer in some way, tracking time is a necessary and important part of game development. Examples include power ups that last for a limited amount of time, end conditions based on time taken, time per lap in a racing game and at the top end of complexity, entire cutscenes that are sequences of many timed operations. </p>
 
@@ -529,7 +529,7 @@ void MoveAlongWaypoints(float movementSpeed)
 }
 </code></pre>
 
-<p>This example is still simple, but well on it's way too becoming overly complicated, also ugly and difficult to read.  You can imagine how it look as we add more features and more timers.</p>
+<p>This example is still simple, but well on it's way too becoming overly complicated, also ugly and difficult to read.  You can imagine how it will look as we add more features and more timers.</p>
 
 <p>With another extension to our promises library we can improve our use of timers. This will allow us to move this logic out of <em>Update</em> and into separate functions, each with a <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">clearly defined responsibility</a>. </p>
 
