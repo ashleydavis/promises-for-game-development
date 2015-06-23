@@ -90,11 +90,11 @@
 
 <p>Results from each async operation are passed through the pipeline. This allows us to easily retrieve and act on results from our async code. When the pipeline has completed successfully our <em>success callback</em> will be invoked.</p>
 
-<p><img src="/content/images/2015/06/PromisesPipeline-1.png" alt=""></p>
+<p><img src="PromisesPipeline.png" alt=""></p>
 
 <p>Promises have a powerful error handling mechanism (conceptually similar to <a href="http://en.wikipedia.org/wiki/Exception_handling">exception handling</a>) that allows error handlers to be injected at any stage of the pipeline. If you are only interested in the success or failure of the entire sequence of async operations, then put your error handling at the end of the pipeline. If an error occurs at any stage of the pipeline, the rest of the pipeline stages will be short-circuited and control transferred to the error handler. This gives the equivalent of try/catch exception handling with respect to our async code. </p>
 
-<p><img src="/content/images/2015/06/PromisesErrors-1.png" alt=""></p>
+<p><img src="PromisesErrors.png" alt=""></p>
 
 <p>We first noticed promises through our experience developing web applications in Javascript. Just so we're clear here, I'm talking about real Javascript, not <a href="http://wiki.unity3d.com/index.php?title=UnityScript_versus_JavaScript">Unity pseudo-Javascript</a>. From reading <a href="http://en.wikipedia.org/wiki/Futures_and_promises">the wikipedia page</a> it appears promises migrated to Javascript from <a href="http://en.wikipedia.org/wiki/Functional_programming">functional languages</a>, where so many good ideas originate.</p>
 
@@ -922,6 +922,16 @@ Ash and Adam.</p>
 
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-    
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-63137941-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
   </body>
 </html>
