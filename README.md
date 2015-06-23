@@ -1,3 +1,7 @@
+# Promises for Game Development #
+
+First published at: [https://www.what-could-possibly-go-wrong.com/promises-for-game-development/](https://www.what-could-possibly-go-wrong.com/promises-for-game-development/)
+
 ## Introduction ##
 
 In this article we talk about our experience making the [promises pattern](http://en.wikipedia.org/wiki/Futures_and_promises) work for game development. We aim to explain how promises can improve your game development process.
