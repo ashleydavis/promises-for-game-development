@@ -45,11 +45,11 @@ A promise is a [software abstraction](http://en.wikipedia.org/wiki/Abstraction_(
 
 Results from each async operation are passed through the pipeline. This allows us to easily retrieve and act on results from our async code. When the pipeline has completed successfully our *success callback* will be invoked.
 
-![](/content/images/2015/06/PromisesPipeline-1.png)
+![](PromisesPipeline.png)
 
 Promises have a powerful error handling mechanism (conceptually similar to [exception handling](http://en.wikipedia.org/wiki/Exception_handling)) that allows error handlers to be injected at any stage of the pipeline. If you are only interested in the success or failure of the entire sequence of async operations, then put your error handling at the end of the pipeline. If an error occurs at any stage of the pipeline, the rest of the pipeline stages will be short-circuited and control transferred to the error handler. This gives the equivalent of try/catch exception handling with respect to our async code. 
 
-![](/content/images/2015/06/PromisesErrors-1.png)
+![](PromisesErrors.png)
 
 We first noticed promises through our experience developing web applications in Javascript. Just so we're clear here, I'm talking about real Javascript, not [Unity pseudo-Javascript](http://wiki.unity3d.com/index.php?title=UnityScript_versus_JavaScript). From reading [the wikipedia page](http://en.wikipedia.org/wiki/Futures_and_promises) it appears promises migrated to Javascript from [functional languages](http://en.wikipedia.org/wiki/Functional_programming), where so many good ideas originate.
 
