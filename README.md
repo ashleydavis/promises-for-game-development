@@ -251,7 +251,7 @@ This is really just a taster of what promises can do. We need to explore them in
 
 ### Promises for Composing Game Logic 
 
-Promise have a powerful ability to compose sequences of operations via the fluent API. We have extended the promises specification by adding composition operators to solve problems specific to game development. In this section we will look at these new operators. *All* for composing parallel operations, *Race* for completing when the first parallel operation completes and *Sequence* for scheduling a collection of sequential operations.  
+Promises have a powerful ability to compose sequences of operations via the fluent API. We have extended the promises specification by adding composition operators to solve problems specific to game development. In this section we will look at these new operators. *All* for composing parallel operations, *Race* for completing when the first parallel operation completes and *Sequence* for scheduling a collection of sequential operations.  
 
 #### Promise.All
 
@@ -309,7 +309,7 @@ Be warned that the other inner promises will continue running until they complet
 
 #### Promise.Sequence
 
-Some scenarios, for example animating a dynamically generated sequence of movements, can be simplified using the *Sequence* function. If you may have a hard-coded sequence of operations: 
+Some scenarios, for example animating a dynamically generated sequence of movements, can be simplified using the *Sequence* function. You may have a hard-coded sequence of operations: 
 
     PromiseOne()
         .Then(PromiseTwo())
@@ -318,13 +318,13 @@ Some scenarios, for example animating a dynamically generated sequence of moveme
         // ... etc ...
         .Done();
 
-*Sequence* is needed to change this to a dynamic generated collection of operations (possibly loaded from data).
+*Sequence* is needed to change this to a dynamically generated collection of operations (possibly loaded from data).
 
 *Sequence* is given a collection of functions, each returning a promise. Each function is invoked in-turn one after the other, but only after the previous promise has resolved. This enables a sequence of asynchronous operations to be executed serially:
 
     IEnumerable<Func<IPromise>> GenerateMovementSequence()
     {
-        // Generate a collection functions that each initiate an async operation 
+        // Generate a collection of functions that each initiate an async operation 
         // and returns a promise. 
     }     
 
@@ -371,7 +371,7 @@ You can see how promises not only enable, but encourage us to separate our logic
 
 ### Promises for time based logic ##
 
-Using promises in the above scenarios has clear benefits, however they really hit their full potential when we extend promises factor in time.
+Using promises in the above scenarios has clear benefits, however they really hit their full potential when we extend promises to factor in time.
 
 Most game developers will have used a timer in some way, tracking time is a necessary and important part of game development. Examples include power ups that last for a limited amount of time, end conditions based on time taken, time per lap in a racing game and at the top end of complexity, entire cutscenes that are sequences of many timed operations. 
 
@@ -448,7 +448,7 @@ Imagine your player character is a shape changer and capable of taking on multip
         }
     }
 
-This example is still simple, but well on it's way too becoming overly complicated, also ugly and difficult to read.  You can imagine how it look as we add more features and more timers.
+This example is still simple, but well on it's way too becoming overly complicated, also ugly and difficult to read.  You can imagine how it will look as we add more features and more timers.
  
 With another extension to our promises library we can improve our use of timers. This will allow us to move this logic out of *Update* and into separate functions, each with a [clearly defined responsibility](http://en.wikipedia.org/wiki/Single_responsibility_principle). 
 
