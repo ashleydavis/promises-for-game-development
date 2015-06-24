@@ -1,9 +1,6 @@
 # Promises for Game Development #
 
-First published at: [https://www.what-could-possibly-go-wrong.com/promises-for-game-development/](https://www.what-could-possibly-go-wrong.com/promises-for-game-development/)
-
-Please use the [github page](http://www.what-could-possibly-go-wrong.com/promises-for-game-development/?utm_source=ash&utm_medium=github&utm_campaign=promises) to log issues and give feedback.
-
+First published at: [What Could Possibly Go Wrong](http://www.what-could-possibly-go-wrong.com/promises-for-game-development/?utm_source=ash&utm_medium=github&utm_campaign=promises)
 
 ## Introduction ##
 
