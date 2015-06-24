@@ -2,7 +2,7 @@
 
 First published at: [https://www.what-could-possibly-go-wrong.com/promises-for-game-development/](https://www.what-could-possibly-go-wrong.com/promises-for-game-development/)
 
-Please use the [github page](https://github.com/ashleydavis/promises-for-game-development) to log issues and give feedback.
+Please use the [github page](http://www.what-could-possibly-go-wrong.com/promises-for-game-development/?utm_source=ash&utm_medium=github&utm_campaign=promises) to log issues and give feedback.
 
 
 ## Introduction ##
