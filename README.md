@@ -39,7 +39,7 @@ A Unity example showing promises can also be found on github: [https://github.co
 
 Promises are a [design pattern](http://en.wikipedia.org/wiki/Software_design_pattern) to structure asynchronous code and smooth over the complexities of running sequences of (dependent) asynchronous operations. 
 
-I read an [article](https://blog.domenic.me/youre-missing-the-point-of-promises/) recently that helped me concisely understand exactly how promises help us. Normally when running an asynchronous function there is no easy way to get a result back. In addition we have the difficulties of handling errors and exceptions. What exactly will happen if the async code throws an exception? As so eloquently put in that article *the point of promises is to give us back [functional composition](http://en.wikipedia.org/wiki/Function_composition_(computer_science)) and [error bubbling](http://en.wikipedia.org/wiki/Exception_handling) in the async world*.
+We noticed an [article](https://blog.domenic.me/youre-missing-the-point-of-promises/) recently that helped me concisely understand exactly how promises help us. Normally when running an asynchronous function there is no easy way to get a result back. In addition we have the difficulties of handling errors and exceptions. What exactly will happen if the async code throws an exception? As so eloquently put in that article *the point of promises is to give us back [functional composition](http://en.wikipedia.org/wiki/Function_composition_(computer_science)) and [error bubbling](http://en.wikipedia.org/wiki/Exception_handling) in the async world*.
 
 A promise is a [software abstraction](http://en.wikipedia.org/wiki/Abstraction_(computer_science)) that can bind together multiple asynchronous operations into a single *[pipeline](http://en.wikipedia.org/wiki/Pipeline_(software))* represented as a *[first-class object](http://stackoverflow.com/questions/705173/what-is-meant-by-first-class-object)*. A contract is made with the promise that at some time in the future the async operation(s) will either complete successfully or have been rejected (indicating that an error occurred at some stage of the pipeline). 
 
@@ -51,7 +51,7 @@ Promises have a powerful error handling mechanism (conceptually similar to [exce
 
 ![](PromisesErrors.png)
 
-We first noticed promises through our experience developing web applications in Javascript. Just so we're clear here, I'm talking about real Javascript, not [Unity pseudo-Javascript](http://wiki.unity3d.com/index.php?title=UnityScript_versus_JavaScript). From reading [the wikipedia page](http://en.wikipedia.org/wiki/Futures_and_promises) it appears promises migrated to Javascript from [functional languages](http://en.wikipedia.org/wiki/Functional_programming), where so many good ideas originate.
+We first noticed promises through our experience developing web applications in Javascript. Just so we're clear here, we mean real Javascript, not [Unity pseudo-Javascript](http://wiki.unity3d.com/index.php?title=UnityScript_versus_JavaScript). From reading [the wikipedia page](http://en.wikipedia.org/wiki/Futures_and_promises) it appears promises migrated to Javascript from [functional languages](http://en.wikipedia.org/wiki/Functional_programming), where so many good ideas originate.
 
 Promises in Javascript are often lauded as the cure for the antipattern known as [callback hell](http://callbackhell.com/). Of course there are many Javascript libraries for management of async code, however the promises pattern has risen above the herd as the solution of choice and something of a [standard](https://promisesaplus.com/).
 
@@ -121,7 +121,7 @@ Let's up the ante. For the RSG Promise library we have added a new function that
 		)
         .Done(linkedAssets => OnAllAssetsLoaded());
 
-*ThenAll* is passed a callback that returns an [*collection*](https://msdn.microsoft.com/en-us/LIBRary/9eekhta0(v=vs.90).aspx) of promises. All of these promises must complete before the pipeline continues. [LINQ](http://spin.atomicobject.com/2013/11/18/linq-functional-c/) *[Select](https://msdn.microsoft.com/en-us/library/system.linq.enumerable.select(v=vs.100).aspx)* transforms the *collection of linked assets* into a *collection of promises* to load those assets. As C# programmers we prefer LINQ's [*method syntax* over its *query syntax*](https://msdn.microsoft.com/en-us/library/bb397947.aspx).  
+*ThenAll* is passed a callback that returns a [*collection*](https://msdn.microsoft.com/en-us/LIBRary/9eekhta0(v=vs.90).aspx) of promises. All of these promises must complete before the pipeline continues. [LINQ](http://spin.atomicobject.com/2013/11/18/linq-functional-c/) *[Select](https://msdn.microsoft.com/en-us/library/system.linq.enumerable.select(v=vs.100).aspx)* transforms the *collection of linked assets* into a *collection of promises* to load those assets. As C# programmers we prefer LINQ's [*method syntax* over its *query syntax*](https://msdn.microsoft.com/en-us/library/bb397947.aspx).  
 
 The great thing about promises is just how easy it is to manage chained sequences of async operations. Need to insert a new operation into your pipeline? The pipeline is easily modified:
 
@@ -243,9 +243,7 @@ The methods presented above can very quickly turn into a tangled web of code tha
         .Then(loadedLevel => LoadAnotherThing(loadedLevel)))
         .Done(loadedLevel => StartGame(loadedLevel));
 
-I'm sure you can agree that promises make this sort of thing much more understandable, not to mention easy to modify.
-
-Another nice thing about promises: gradually refactoring of your code is possible to convert to promises. We know because we did this, incrementally replacing Unity coroutines with promises (and testing very carefully at each stage).
+Another nice thing about promises: with gradual refactoring of your code it is possible to convert to promises. We know because we did this, incrementally replacing Unity coroutines with promises (and testing very carefully at each stage).
 
 This is really just a taster of what promises can do. We need to explore them in more depth so you'll understand how transformative they can be for your development process.    
 
@@ -601,7 +599,7 @@ Earlier, when talking about *Promise.All*, we talked about two promise-returning
         return promiseTimer.WaitUntil(_ => levelsCompleted >= levelCount);
     }
 
-Using *WaitUntil* we can quickly and easily build complicated systems that are still manageable. For instance, let us assume our crazy shapechanger game has a whacky achievement system. It has an achievement for completing a level with 1 second left on the clock, on a Tuesday, while in dolphin form (I don't know why you'd do this, but it could be fun). I'm sure you can imagine how complicated these types of achievements can be to code. Especially if your game has 150+ of them. We can use *WaitUntil* to monitor a complex set of conditions and dynamically respond:    
+Using *WaitUntil* we can quickly and easily build complicated systems that are still manageable. For instance, let us assume our crazy shapechanger game has a whacky achievement system. It has an achievement for completing a level with 1 second left on the clock, on a Tuesday, while in dolphin form (I don't know why you'd do this, but it could be fun). You can imagine how complicated these types of achievements can be to code. Especially if your game has 150+ of them. We can use *WaitUntil* to monitor a complex set of conditions and dynamically respond:    
 
     class LevelManager
     {
